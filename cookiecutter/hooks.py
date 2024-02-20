@@ -202,12 +202,7 @@ def run_process_context_hook(repo_dir, context):
     with work_in(repo_dir):
         scripts = find_hook('process_context')
         if not scripts:
-            return repo_dir, context
-
-    # Create a temporary directory
-    repo_dir = create_tmp_repo_dir(repo_dir)
-    with work_in(repo_dir):
-        scripts = find_hook('process_context')
+            return context
         for script in scripts:
             from importlib.util import spec_from_file_location, module_from_spec
             try:
@@ -220,4 +215,4 @@ def run_process_context_hook(repo_dir, context):
                 context["cookiecutter"] = process_context_module.process_context(context["cookiecutter"])
             except FailedHookException:
                 raise FailedHookException('Process-Context Hook execution failed')
-    return repo_dir, context
+    return context

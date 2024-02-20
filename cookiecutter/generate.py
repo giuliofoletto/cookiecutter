@@ -335,7 +335,7 @@ def generate_files(
     delete_project_on_failure = output_directory_created and not keep_project_on_failure
 
     if accept_hooks:
-        repo_dir, context = run_process_context_hook(repo_dir, context)
+        context = run_process_context_hook(repo_dir, context)
         run_hook_from_repo_dir(
             repo_dir, 'pre_gen_project', project_dir, context, delete_project_on_failure
         )
