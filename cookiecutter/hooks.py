@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 _HOOKS = [
     'pre_prompt',
+    'process_context',
     'pre_gen_project',
     'post_gen_project',
 ]
@@ -189,3 +190,34 @@ def run_pre_prompt_hook(repo_dir: "os.PathLike[str]") -> Path:
             except FailedHookException:
                 raise FailedHookException('Pre-Prompt Hook script failed')
     return repo_dir
+
+
+def run_process_context_hook(repo_dir, context):
+    """Run process_context hook from repo directory.
+
+    :param repo_dir: Project template input directory.
+    :param context: Cookiecutter project context.
+    """
+    # Check if we have a valid process_context script
+    with work_in(repo_dir):
+        scripts = find_hook('process_context')
+        if not scripts:
+            return repo_dir, context
+
+    # Create a temporary directory
+    repo_dir = create_tmp_repo_dir(repo_dir)
+    with work_in(repo_dir):
+        scripts = find_hook('process_context')
+        for script in scripts:
+            from importlib.util import spec_from_file_location, module_from_spec
+            try:
+                spec = spec_from_file_location("process_context_module", script)
+                process_context_module = module_from_spec(spec)
+                spec.loader.exec_module(process_context_module)
+                # We allow processing only of the cookiecutter portion of the context
+                # We can also think of allowing all modifications and pass the entire context
+                # This would require the hook function to access the cookiecutter portion via context["cookiecutter"]["some-key"]
+                context["cookiecutter"] = process_context_module.process_context(context["cookiecutter"])
+            except FailedHookException:
+                raise FailedHookException('Process-Context Hook execution failed')
+    return repo_dir, context

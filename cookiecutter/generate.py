@@ -18,7 +18,7 @@ from cookiecutter.exceptions import (
     UndefinedVariableInTemplate,
 )
 from cookiecutter.find import find_template
-from cookiecutter.hooks import run_hook_from_repo_dir
+from cookiecutter.hooks import run_hook_from_repo_dir, run_process_context_hook
 from cookiecutter.utils import (
     create_env_with_context,
     make_sure_path_exists,
@@ -335,6 +335,7 @@ def generate_files(
     delete_project_on_failure = output_directory_created and not keep_project_on_failure
 
     if accept_hooks:
+        repo_dir, context = run_process_context_hook(repo_dir, context)
         run_hook_from_repo_dir(
             repo_dir, 'pre_gen_project', project_dir, context, delete_project_on_failure
         )
